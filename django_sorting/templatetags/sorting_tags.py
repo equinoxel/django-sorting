@@ -1,6 +1,7 @@
 from django import template
 from django.http import Http404
 from django.conf import settings
+from django.utils.translation import ugettext as _
 
 register = template.Library()
 
@@ -19,14 +20,17 @@ def anchor(parser, token):
     """
     Parses a tag that's supposed to be in this format: {% anchor field title %}    
     """
-    bits = [b.strip('"\'') for b in token.split_contents()]
+    bits = token.split_contents()
     if len(bits) < 2:
         raise template.TemplateSyntaxError, "anchor tag takes at least 1 argument"
     try:
         title = bits[2]
     except IndexError:
         title = bits[1].capitalize()
-    return SortAnchorNode(bits[1].strip(), title.strip())
+    if title.startswith('_('):
+        title = title[2:-1]
+
+    return SortAnchorNode(bits[1].strip('"\'').strip(), _(title.strip('"\'').strip()))
     
 
 class SortAnchorNode(template.Node):
